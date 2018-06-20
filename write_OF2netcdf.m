@@ -1,4 +1,5 @@
 function write_OF2netcdf(expt,maskname,mygrid,mode)
+% Writes mask files that define adjoint experiment objective functions to netcdf format
 %INPUTS:
 %        expt- Location of mask files
 %        maskname - maskname to convert to netcdf format, there should be
@@ -64,7 +65,7 @@ if strcmp(mode,'nctiles')||strcmp(mode,'both')
     coords = 'lat lon dep tim';
     dimsize = [90 90 50 nt];
     fieldname = '';
-    dimlist=write2nctiles(fout,[],overwrite,{'descr',descr},{'fldName',fieldname},{'tileNo',tileno},{'rdm',readme},{'coord',coords},{'dimsize',dimsize});
+    dimlist=mywrite2nctiles(fout,[],overwrite,{'descr',descr},{'fldName',fieldname},{'tileNo',tileno},{'rdm',readme},{'coord',coords},{'dimsize',dimsize});
     
     dimIn2D = cell(1,length(dimlist));
     dimInT = dimIn2D;
@@ -82,31 +83,31 @@ if strcmp(mode,'nctiles')||strcmp(mode,'both')
     fieldname = 'maskC';
     longname = 'Spatial Mask on C grid';
     coords = 'lat lon dep';
-    write2nctiles(fout,maskC,overwrite,{'descr',descr},{'tileNo',tileno},{'rdm',readme},{'fldName',fieldname},{'longName',longname},{'coord',coords},{'dimIn',dimIn3D});
+    mywrite2nctiles(fout,maskC,overwrite,{'descr',descr},{'tileNo',tileno},{'rdm',readme},{'fldName',fieldname},{'longName',longname},{'coord',coords},{'dimIn',dimIn3D});
     
     overwrite = 0;
     fieldname = 'maskT';
     longname = 'Temporal Mask defined monthly';
     coords = 'tim';
-    write2nctiles(fout,maskT,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'longName',longname},{'coord',coords},{'dimIn',dimInT});
+    mywrite2nctiles(fout,maskT,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'longName',longname},{'coord',coords},{'dimIn',dimInT});
     
     fieldname = 'lon';
     units = 'degrees east';
-    write2nctiles(fout,mygrid.XC,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimIn2D});
+    mywrite2nctiles(fout,mygrid.XC,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimIn2D});
     
     fieldname = 'lat';
     units = 'degrees north';
-    write2nctiles(fout,mygrid.YC,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimIn2D});
+    mywrite2nctiles(fout,mygrid.YC,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimIn2D});
     
     fieldname = 'tim';
     units = 'Days since January 0, 0000';
-    write2nctiles(fout,time2,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimInT});
+    mywrite2nctiles(fout,time2,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimInT});
     
     area = mygrid.RAC;
     fieldname = 'area';
     units = 'm^2';
     longname='grid cell area';
-    write2nctiles(fout,area,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn2D});
+    mywrite2nctiles(fout,area,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn2D});
     
     mask = mygrid.mskC;
     dep = -mygrid.RC;
@@ -115,15 +116,15 @@ if strcmp(mode,'nctiles')||strcmp(mode,'both')
     fieldname = 'land';
     units = '1';
     longname='land mask';
-    write2nctiles(fout,mask,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn3D});
+    mywrite2nctiles(fout,mask,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn3D});
     
     fieldname = 'thic';
     units = 'm';
-    write2nctiles(fout,dz,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn', dimInZ});
+    mywrite2nctiles(fout,dz,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn', dimInZ});
     
     fieldname = 'dep';
     units = 'm';
-    write2nctiles(fout,dep,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn', dimInZ});
+    mywrite2nctiles(fout,dep,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn', dimInZ});
     
 end
 
@@ -171,23 +172,23 @@ if strcmp(mode,'interp')||strcmp(mode,'both')
     ncdefDim(ncid,'tim',nt)
     ncdefDim(ncid,'dep',50)
     
-    ncdefVar(ncid,'lon','double',{'lon'});
+    myncdefVar(ncid,'lon','double',{'lon'});
     ncputAtt(ncid,'lon','long_name','longitude');
     ncputAtt(ncid,'lon','units','degrees_east');
     
-    ncdefVar(ncid,'lat','double',{'lat'});
+    myncdefVar(ncid,'lat','double',{'lat'});
     ncputAtt(ncid,'lat','long_name','latitude');
     ncputAtt(ncid,'lat','units','degrees_north');
     
-    ncdefVar(ncid,'tim','double',{'tim'});
+    myncdefVar(ncid,'tim','double',{'tim'});
     ncputAtt(ncid,'tim','long_name','time');
     ncputAtt(ncid,'tim','units','Days since January 0, 0000');
     
-    ncdefVar(ncid,'dep','double',{'dep'});
+    myncdefVar(ncid,'dep','double',{'dep'});
     ncputAtt(ncid,'dep','long_name','depth');
     ncputAtt(ncid,'dep','units','m');
     
-    ncdefVar(ncid,'thic','double',{'dep'});
+    myncdefVar(ncid,'thic','double',{'dep'});
     ncputAtt(ncid,'thic','long_name','cell thickness');
     ncputAtt(ncid,'thic','units','m');
     
@@ -197,11 +198,11 @@ if strcmp(mode,'interp')||strcmp(mode,'both')
     
     dz = mygrid.DRF;
     
-    ncputvar(ncid,'lon',lon)
-    ncputvar(ncid,'lat',lat)
-    ncputvar(ncid,'tim',time2)
-    ncputvar(ncid,'dep',dep)
-    ncputvar(ncid,'dep',dz)
+    myncputvar(ncid,'lon',lon)
+    myncputvar(ncid,'lat',lat)
+    myncputvar(ncid,'tim',time2)
+    myncputvar(ncid,'dep',dep)
+    myncputvar(ncid,'dep',dz)
     
     display('Writing main variables')
     
@@ -211,20 +212,20 @@ if strcmp(mode,'interp')||strcmp(mode,'both')
     fieldname = 'maskT';
     longname = 'Temporal Mask defined monthly';
     coords = {'tim'};
-    ncdefVar(ncid,fieldname,'double',coords);
+    myncdefVar(ncid,fieldname,'double',coords);
     ncputAtt(ncid,fieldname,'long_name',longname);
     ncputAtt(ncid,fieldname,'units',units);
     netcdf.endDef(ncid);
     ncclose(ncid);
     
     ncid=ncopen(fout,'write');
-    ncputvar(ncid,'maskT',maskT)
+    myncputvar(ncid,'maskT',maskT)
     
     netcdf.reDef(ncid);
     fieldname = 'maskC';
     longname = 'Spatial Mask on C grid';
     coords = {'lat','lon','dep'};
-    ncdefVar(ncid,fieldname,'double',coords);
+    myncdefVar(ncid,fieldname,'double',coords);
     ncputAtt(ncid,fieldname,'long_name',longname);
     ncputAtt(ncid,fieldname,'units',units);
     netcdf.endDef(ncid);

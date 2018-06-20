@@ -1,4 +1,5 @@
 function write_adj2netcdf(expt,var,mygrid,mode)
+% Writes adjoint experiment sensitivity fields to netcdf format
 %INPUTS:
 %        expt- Location of var files
 %        var - Variable name(s) (from file name) to convert to netcdf format
@@ -66,7 +67,7 @@ for v = 1:nvars
         
         % Write main variable
         overwrite = 1;
-        dimlist=write2nctiles(fout,varin,overwrite,{'missval',missval},{'fillval',fillval},{'descr',descr},{'tileNo',tileno},{'rdm',readme},{'fldName',fieldname},{'longName',longname},{'units',units},{'coord',coords});
+        dimlist=mywrite2nctiles(fout,varin,overwrite,{'missval',missval},{'fillval',fillval},{'descr',descr},{'tileNo',tileno},{'rdm',readme},{'fldName',fieldname},{'longName',longname},{'units',units},{'coord',coords});
         
         % Get the right dimensions for other vars
         dimIn2D = cell(1,length(dimlist));
@@ -88,35 +89,35 @@ for v = 1:nvars
         
         fieldname = 'lon';
         units = 'degrees east';
-        write2nctiles(fout,mygrid.XC,overwrite,{'missval',missval},{'fillval',fillval},{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimIn2D});
+        mywrite2nctiles(fout,mygrid.XC,overwrite,{'missval',missval},{'fillval',fillval},{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimIn2D});
         
         fieldname = 'lat';
         units = 'degrees north';
-        write2nctiles(fout,mygrid.YC,overwrite,{'missval',missval},{'fillval',fillval},{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimIn2D});
+        mywrite2nctiles(fout,mygrid.YC,overwrite,{'missval',missval},{'fillval',fillval},{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimIn2D});
         
         fieldname = 'tim';
         units = 'Days since January 0, 0000';
-        write2nctiles(fout,time,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimInT});
+        mywrite2nctiles(fout,time,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimInT});
         
         fieldname = 'tim_lag';
         units = 'Lag in Days';
-        write2nctiles(fout,time_lag,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimInT});
+        mywrite2nctiles(fout,time_lag,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimInT});
         
         fieldname = 'date0';
         longname = 'Start of Simulation';
         units = 'Days since January 0, 0000';
-        write2nctiles(fout,date0_num,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',[]});
+        mywrite2nctiles(fout,date0_num,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',[]});
         
         fieldname = 'date_lag0';
         longname = 'Start of Objective Function : Lag 0';
         units = 'Days since January 0, 0000';
-        write2nctiles(fout,date_lag0,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',[]});
+        mywrite2nctiles(fout,date_lag0,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',[]});
         
         area = mygrid.RAC;
         fieldname = 'area';
         units = 'm^2';
         longname='grid cell area';
-        write2nctiles(fout,area,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn2D});
+        mywrite2nctiles(fout,area,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn2D});
         
         mask = mygrid.mskC;
         dep = -mygrid.RC;
@@ -127,22 +128,22 @@ for v = 1:nvars
             fieldname = 'land';
             units = '1';
             longname='land mask';
-            write2nctiles(fout,squeeze(mask(:,:,1)),overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn2D});
+            mywrite2nctiles(fout,squeeze(mask(:,:,1)),overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn2D});
             
         elseif nd == 4
             
             fieldname = 'land';
             units = '1';
             longname='land mask';
-            write2nctiles(fout,mask,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn3D});
+            mywrite2nctiles(fout,mask,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn3D});
             
             fieldname = 'thic';
             units = 'm';
-            write2nctiles(fout,dz,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn', dimInZ});
+            mywrite2nctiles(fout,dz,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn', dimInZ});
             
             fieldname = 'dep';
             units = 'm';
-            write2nctiles(fout,dep,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn', dimInZ});
+            mywrite2nctiles(fout,dep,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn', dimInZ});
             
         end
         
@@ -204,24 +205,24 @@ for v = 1:nvars
             ncdefDim(ncid,'dep',50)
         end
         
-        ncdefVar(ncid,'lon','double',{'lon'});
+        myncdefVar(ncid,'lon','double',{'lon'});
         ncputAtt(ncid,'lon','long_name','longitude');
         ncputAtt(ncid,'lon','units','degrees_east');
         
-        ncdefVar(ncid,'lat','double',{'lat'});
+        myncdefVar(ncid,'lat','double',{'lat'});
         ncputAtt(ncid,'lat','long_name','latitude');
         ncputAtt(ncid,'lat','units','degrees_north');
         
-        ncdefVar(ncid,'tim','double',{'tim'});
+        myncdefVar(ncid,'tim','double',{'tim'});
         ncputAtt(ncid,'tim','long_name','time');
         ncputAtt(ncid,'tim','units','Days since January 0, 0000');
         
         if nd == 4
-            ncdefVar(ncid,'dep','double',{'dep'});
+            myncdefVar(ncid,'dep','double',{'dep'});
             ncputAtt(ncid,'dep','long_name','depth');
             ncputAtt(ncid,'dep','units','m');
             
-            ncdefVar(ncid,'thic','double',{'dep'});
+            myncdefVar(ncid,'thic','double',{'dep'});
             ncputAtt(ncid,'thic','long_name','cell thickness');
             ncputAtt(ncid,'thic','units','m');
         end
@@ -230,12 +231,12 @@ for v = 1:nvars
         
         ncid=ncopen(fout,'write');
         
-        ncputvar(ncid,'lon',lon)
-        ncputvar(ncid,'lat',lat)
-        ncputvar(ncid,'tim',time)
+        myncputvar(ncid,'lon',lon)
+        myncputvar(ncid,'lat',lat)
+        myncputvar(ncid,'tim',time)
         if nd == 4
-            ncputvar(ncid,'dep',dep)
-            ncputvar(ncid,'dep',dz)
+            myncputvar(ncid,'dep',dep)
+            myncputvar(ncid,'dep',dz)
         end
         
         display('Writing time variables')
@@ -245,33 +246,33 @@ for v = 1:nvars
         longname = 'time_lag';
         coords = {'tim'};
         netcdf.reDef(ncid);
-        ncdefVar(ncid,fieldname,'double',coords);
+        myncdefVar(ncid,fieldname,'double',coords);
         ncputAtt(ncid,fieldname,'long_name',longname);
         ncputAtt(ncid,fieldname,'units',units);
         netcdf.endDef(ncid);
-        ncputvar(ncid,fieldname,time_lag)
+        myncputvar(ncid,fieldname,time_lag)
         
         fieldname = 'date0';
         longname = 'Start of Simulation';
         units = 'Days since January 0, 0000';
         coords = [];
         netcdf.reDef(ncid);
-        ncdefVar(ncid,fieldname,'double',coords);
+        myncdefVar(ncid,fieldname,'double',coords);
         ncputAtt(ncid,fieldname,'long_name',longname);
         ncputAtt(ncid,fieldname,'units',units);
         netcdf.endDef(ncid);
-        ncputvar(ncid,fieldname,date0_num)
+        myncputvar(ncid,fieldname,date0_num)
         
         fieldname = 'date_lag0';
         longname = 'Start of Objective Function : Lag 0';
         units = 'Days since January 0, 0000';
         coords = [];
         netcdf.reDef(ncid);
-        ncdefVar(ncid,fieldname,'double',coords);
+        myncdefVar(ncid,fieldname,'double',coords);
         ncputAtt(ncid,fieldname,'long_name',longname);
         ncputAtt(ncid,fieldname,'units',units);
         netcdf.endDef(ncid);
-        ncputvar(ncid,fieldname,date_lag0)
+        myncputvar(ncid,fieldname,date_lag0)
         
         display('Writing main variable')
         
@@ -285,7 +286,7 @@ for v = 1:nvars
         else
             coords={'lon','lat','dep','tim'};
         end
-        ncdefVar(ncid,fieldname,'double',coords);
+        myncdefVar(ncid,fieldname,'double',coords);
         ncputAtt(ncid,fieldname,'long_name',longname);
         ncputAtt(ncid,fieldname,'units',units);
         netcdf.endDef(ncid);

@@ -1,4 +1,5 @@
-
+% Options for function write_OF2netcdf 
+% EDIT to provide details of relevent experiment
 descr = 'Objective Function for Southern Ocean Adjoint Sensitivity Experiments';
 tileno = gcmfaces_loc_tile(90,90); % For standard 13 tile output
 readme = {'Objective Function as defined by space and time masks, maskC and maskT',...
