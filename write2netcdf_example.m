@@ -1,6 +1,6 @@
 % Example calling of write_adj2netcdf and write_OF2netcdf
 addpath ~/Matlab/gcmfaces  % Path to gcmfaces toolbox, available from https://github.com/gaelforget/gcmfaces
-addpath ~/Matlab/m_map     % Path to m_map toolbox (if you want plots), available from facebook
+addpath ~/Matlab/m_map     % Path to m_map toolbox (if you want plots), available from https://www.eoas.ubc.ca/~rich/map.html
 
 % Load gcmfaces and grid
 gcmfaces_global;
