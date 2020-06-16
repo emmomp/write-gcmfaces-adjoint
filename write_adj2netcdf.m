@@ -15,6 +15,7 @@ for v = 1:nvars
     display('Loading Options')
     adj_netcdf_options;
     
+    
     fieldname=var{v};
     longname=['Sensitivity of Objective Function to ' longn(fieldname)];
     units = [unit_of ' per ' unit_v(fieldname)];
@@ -50,6 +51,7 @@ for v = 1:nvars
         display('Expecting 3 or 4d variable input')
     end
     
+    
     if strcmp(mode,'nctiles')||strcmp(mode,'both')
         
         readme{length(readme)+1}='Experiment run on LLC grid';
@@ -65,86 +67,126 @@ for v = 1:nvars
             display(readme{r})
         end
         
-        % Write main variable
-        overwrite = 1;
-        dimlist=mywrite2nctiles(fout,varin,overwrite,{'missval',missval},{'fillval',fillval},{'descr',descr},{'tileNo',tileno},{'rdm',readme},{'fldName',fieldname},{'longName',longname},{'units',units},{'coord',coords});
-        
-        % Get the right dimensions for other vars
-        dimIn2D = cell(1,length(dimlist));
-        dimInT = dimIn2D;
-        dimIn3D = dimIn2D;
-        dimInZ = dimIn2D;
-        
-        for ff=1:length(dimlist)
-            dimIn2D{ff} = {dimlist{ff}{end-1:end}};
-            dimInT{ff} = {dimlist{ff}{1}};
-            if nd == 4
-                dimIn3D{ff} = {dimlist{ff}{end-2:end}};
-                dimInZ{ff}={dimlist{ff}{end-2}};
-            end
+        structIn=[];
+        structIn.vars.(var{v})=varin;  
+        structIn.vars.lon=mygrid.XC;
+        structIn.vars.lat=mygrid.YC;
+        structIn.vars.tim=time;
+        structIn.vars.tim_lag=time_lag;
+        structIn.vars.date0=date0_num;
+        structIn.vars.date_lag0=date_lag0;
+        structIn.vars.area=mygrid.RAC:
+        if nd==3
+            structIn.vars.land=squeeze(mygrid.mskC(:,:,1));
+        elseif nd==4
+            structIn.vars.land=mygrid.mskC;
+            structIn.vars.thic=mygrid.DRF;
+            structIn.vars.dep=-mygrid.RC;         
         end
         
-        % Add other variables from grid, time
-        overwrite = 0;
+        structIn.descr=descr;
         
-        fieldname = 'lon';
-        units = 'degrees east';
-        mywrite2nctiles(fout,mygrid.XC,overwrite,{'missval',missval},{'fillval',fillval},{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimIn2D});
+        vars=[]; nv=length(vars)+1;
+        vars(nv).fldName=varin; vars(nv).longName=longname; vars(nv).units=units; nv=length(vars)+1;
+        vars(nv).fldName='lon'; vars(nv).longName='longitude'; vars(nv).units='degrees_east'; nv=length(vars)+1;
+        vars(nv).fldName='lat'; vars(nv).longName='latitude'; vars(nv).units='degrees_north'; nv=length(vars)+1;
+        vars(nv).fldName='tim'; vars(nv).longName='time'; vars(nv).units='Days since January 0, 0000'; nv=length(vars)+1;
+        vars(nv).fldName='tim_lag'; vars(nv).longName='time lag'; vars(nv).units='Lag in Days'; nv=length(vars)+1;
+        vars(nv).fldName='date0'; vars(nv).longName='Start of Simulation'; vars(nv).units='Days since January 0, 0000'; nv=length(vars)+1;
+        vars(nv).fldName='date_lag0'; vars(nv).longName='Start of Objective Function : Lag 0'; vars(nv).units='Days since January 0, 0000'; nv=length(vars)+1;
+        vars(nv).fldName='area'; vars(nv).longName='grid cell area'; vars(nv).units='m^2'; nv=length(vars)+1;
+        if nd==3
+            vars(nv).fldName='land'; vars(nv).longName='land mask'; vars(nv).units='1'; nv=length(vars)+1;
+        elseif nd==4
+            vars(nv).fldName='land'; vars(nv).longName='land mask'; vars(nv).units='1'; nv=length(vars)+1;
+            vars(nv).fldName='thic'; vars(nv).longName='grid cell thickness'; vars(nv).units='m'; nv=length(vars)+1;           
+            vars(nv).fldName='dep'; vars(nv).longName='depth'; vars(nv).units='m'; nv=length(vars)+1;
+        end
         
-        fieldname = 'lat';
-        units = 'degrees north';
-        mywrite2nctiles(fout,mygrid.YC,overwrite,{'missval',missval},{'fillval',fillval},{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimIn2D});
+        structIn.defs=vars;
         
-        fieldname = 'tim';
-        units = 'Days since January 0, 0000';
-        mywrite2nctiles(fout,time,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimInT});
-        
-        fieldname = 'tim_lag';
-        units = 'Lag in Days';
-        mywrite2nctiles(fout,time_lag,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimInT});
-        
-        fieldname = 'date0';
-        longname = 'Start of Simulation';
-        units = 'Days since January 0, 0000';
-        mywrite2nctiles(fout,date0_num,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',[]});
-        
-        fieldname = 'date_lag0';
-        longname = 'Start of Objective Function : Lag 0';
-        units = 'Days since January 0, 0000';
-        mywrite2nctiles(fout,date_lag0,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',[]});
-        
-        area = mygrid.RAC;
-        fieldname = 'area';
-        units = 'm^2';
-        longname='grid cell area';
-        mywrite2nctiles(fout,area,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn2D});
-        
-        mask = mygrid.mskC;
-        dep = -mygrid.RC;
-        dz = mygrid.DRF;
-        
-        if nd == 3
+        struct2nctiles(expt,fout,structIn,[90 90]);
             
-            fieldname = 'land';
-            units = '1';
-            longname='land mask';
-            mywrite2nctiles(fout,squeeze(mask(:,:,1)),overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn2D});
-            
-        elseif nd == 4
-            
-            fieldname = 'land';
-            units = '1';
-            longname='land mask';
-            mywrite2nctiles(fout,mask,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn3D});
-            
-            fieldname = 'thic';
-            units = 'm';
-            mywrite2nctiles(fout,dz,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn', dimInZ});
-            
-            fieldname = 'dep';
-            units = 'm';
-            mywrite2nctiles(fout,dep,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn', dimInZ});
-            
+%         % Write main variable
+%         overwrite = 1;
+%         dimlist=mywrite2nctiles(fout,varin,overwrite,{'missval',missval},{'fillval',fillval},{'descr',descr},{'tileNo',tileno},{'rdm',readme},{'fldName',fieldname},{'longName',longname},{'units',units},{'coord',coords});
+%         
+%         % Get the right dimensions for other vars
+%         dimIn2D = cell(1,length(dimlist));
+%         dimInT = dimIn2D;
+%         dimIn3D = dimIn2D;
+%         dimInZ = dimIn2D;
+%         
+%         for ff=1:length(dimlist)
+%             dimIn2D{ff} = {dimlist{ff}{end-1:end}};
+%             dimInT{ff} = {dimlist{ff}{1}};
+%             if nd == 4
+%                 dimIn3D{ff} = {dimlist{ff}{end-2:end}};
+%                 dimInZ{ff}={dimlist{ff}{end-2}};
+%             end
+%         end
+%         
+%         % Add other variables from grid, time
+%         overwrite = 0;
+%         
+%         fieldname = 'lon';
+%         units = 'degrees east';
+%         mywrite2nctiles(fout,mygrid.XC,overwrite,{'missval',missval},{'fillval',fillval},{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimIn2D});
+%         
+%         fieldname = 'lat';
+%         units = 'degrees north';
+%         mywrite2nctiles(fout,mygrid.YC,overwrite,{'missval',missval},{'fillval',fillval},{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimIn2D});
+%         
+%         fieldname = 'tim';
+%         units = 'Days since January 0, 0000';
+%         mywrite2nctiles(fout,time,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimInT});
+%         
+%         fieldname = 'tim_lag';
+%         units = 'Lag in Days';
+%         mywrite2nctiles(fout,time_lag,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn',dimInT});
+%         
+%         fieldname = 'date0';
+%         longname = 'Start of Simulation';
+%         units = 'Days since January 0, 0000';
+%         mywrite2nctiles(fout,date0_num,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',[]});
+%         
+%         fieldname = 'date_lag0';
+%         longname = 'Start of Objective Function : Lag 0';
+%         units = 'Days since January 0, 0000';
+%         mywrite2nctiles(fout,date_lag0,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',[]});
+%         
+%         area = mygrid.RAC;
+%         fieldname = 'area';
+%         units = 'm^2';
+%         longname='grid cell area';
+%         mywrite2nctiles(fout,area,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn2D});
+%         
+%         mask = mygrid.mskC;
+%         dep = -mygrid.RC;
+%         dz = mygrid.DRF;
+%         
+%         if nd == 3
+%             
+%             fieldname = 'land';
+%             units = '1';
+%             longname='land mask';
+%             mywrite2nctiles(fout,squeeze(mask(:,:,1)),overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn2D});
+%             
+%         elseif nd == 4
+%             
+%             fieldname = 'land';
+%             units = '1';
+%             longname='land mask';
+%             mywrite2nctiles(fout,mask,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'longName',longname},{'dimIn',dimIn3D});
+%             
+%             fieldname = 'thic';
+%             units = 'm';
+%             mywrite2nctiles(fout,dz,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn', dimInZ});
+%             
+%             fieldname = 'dep';
+%             units = 'm';
+%             mywrite2nctiles(fout,dep,overwrite,{'tileNo',tileno},{'fldName',fieldname},{'units',units},{'dimIn', dimInZ});
+%             
         end
         
     end
